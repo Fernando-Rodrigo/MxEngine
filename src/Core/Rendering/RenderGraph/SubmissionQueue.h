@@ -28,52 +28,40 @@
 
 #pragma once
 
-#include "BufferBase.h"
+#include <VulkanAbstractionLayer/VulkanContext.h>
 
 namespace MxEngine
 {
-    class ShaderStorageBuffer : public BufferBase
+    class SubmissionQueue
     {
     public:
+        static void StartQueue();
+        static void EndQueue();
+        static VulkanAbstractionLayer::CommandBuffer& GetCommandBuffer();
+        static VulkanAbstractionLayer::StageBuffer& GetStageBuffer();
+        static void RecordAllocation(size_t byteSize);
+        static void FlushQueue();
+
+        static void CopyToBuffer(const uint8_t* data, size_t byteSize, const VulkanAbstractionLayer::Buffer& buffer, size_t offset);
+
         template<typename T>
-        ShaderStorageBuffer(const T* data, size_t count, UsageType usage)
+        static void CopyToBuffer(const T* data, const VulkanAbstractionLayer::Buffer& buffer, size_t offset)
         {
-            this->Load<T>(data, count, usage);
+            SubmissionQueue::CopyToBuffer((const uint8_t*)data, sizeof(T), buffer, offset);
+        }
+        
+        template<typename T>
+        static void CopyToBuffer(ArrayView<const T> data, const VulkanAbstractionLayer::Buffer& buffer, size_t offset)
+        {
+            SubmissionQueue::CopyToBuffer((const uint8_t*)data.data(), data.size() * sizeof(T), buffer, offset);
         }
 
         template<typename T>
-        size_t GetSize() const
+        static void CopyToBuffer(ArrayView<T> data, const VulkanAbstractionLayer::Buffer& buffer, size_t offset)
         {
-            return this->GetByteSize() / sizeof(T);
+            SubmissionQueue::CopyToBuffer((const uint8_t*)data.data(), data.size() * sizeof(T), buffer, offset);
         }
 
-        template<typename T>
-        void Load(const T* data, size_t count, UsageType usage)
-        {
-            BufferBase::Load(BufferType::SHADER_STORAGE, (const uint8_t*)data, count * sizeof(T), usage);
-        }
-
-        template<typename T>
-        void BufferSubData(const T* data, size_t count, size_t offsetCount = 0)
-        {
-            BufferBase::BufferSubData((const uint8_t*)data, count * sizeof(T), offsetCount * sizeof(T));
-        }
-
-        template<typename T>
-        void BufferSubDataWithResize(const T* data, size_t count)
-        {
-            BufferBase::BufferDataWithResize((const uint8_t*)data, count * sizeof(T));
-        }
-
-        template<typename T>
-        void GetBufferData(T* data, size_t count, size_t offsetCount = 0)
-        {
-            BufferBase::GetBufferData((uint8_t*)data, count * sizeof(T), offsetCount * sizeof(T));
-        }
-
-        void BindBase(size_t index) const
-        {
-            BufferBase::BindBase(index);
-        }
+        static void CopyFromBuffer(uint8_t* data, size_t byteSize, const VulkanAbstractionLayer::Buffer& buffer, size_t offset);
     };
 }

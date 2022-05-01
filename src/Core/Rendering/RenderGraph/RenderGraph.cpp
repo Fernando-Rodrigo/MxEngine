@@ -26,37 +26,31 @@
 // OR TORT(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "VertexBuffer.h"
+#include "RenderGraph.h"
+#include "DummyRenderPass.h"
+
+#include "Platform/Window/WindowManager.h"
+#include "Platform/Window/Window.h"
+
+#include <VulkanAbstractionLayer/ImGuiRenderPass.h>
 
 namespace MxEngine
 {
-    VertexBuffer::VertexBuffer(const VertexScalar* data, size_t sizeInScalars, UsageType usage)
-    {
-        this->Load(data, sizeInScalars, usage);
-    }
+    using namespace VulkanAbstractionLayer;
 
-    size_t VertexBuffer::GetSize() const
+    UniqueRef<RenderGraph> CreatRenderGraph()
     {
-        return this->GetByteSize() / sizeof(VertexScalar);
-    }
+        RenderGraphBuilder builder;
+        builder
+            .AddRenderPass("DummyPass", MakeUnique<DummyRenderPass>())
+            .AddRenderPass("ImGuiPass", MakeUnique<ImGuiRenderPass>("Output"))
+            .SetOutputName("Output");
 
-    void VertexBuffer::Load(const VertexScalar* data, size_t sizeInScalars, UsageType usage)
-    {
-        BufferBase::Load(BufferType::ARRAY, (const uint8_t*)data, sizeInScalars * sizeof(VertexScalar), usage);
-    }
+        auto renderGraph = builder.Build();
 
-    void VertexBuffer::BufferSubData(const VertexScalar* data, size_t sizeInScalars, size_t offsetInScalars)
-    {
-        BufferBase::BufferSubData((const uint8_t*)data, sizeInScalars * sizeof(VertexScalar), offsetInScalars * sizeof(VertexScalar));
-    }
+        auto imguiRenderPass = renderGraph->GetNodeByName("ImGuiPass").PassNative.RenderPassHandle;
+        ImGuiVulkanContext::Init(*WindowManager::GetWindow().GetNativeHandle(), imguiRenderPass);
 
-    void VertexBuffer::BufferDataWithResize(const VertexScalar* data, size_t sizeInScalars)
-    {
-        BufferBase::BufferDataWithResize((const uint8_t*)data, sizeInScalars * sizeof(VertexScalar));
-    }
-
-    void VertexBuffer::GetBufferData(VertexScalar* data, size_t sizeInScalars, size_t offsetInScalars) const
-    {
-        BufferBase::GetBufferData((uint8_t*)data, sizeInScalars * sizeof(VertexScalar), offsetInScalars * sizeof(VertexScalar));
+        return renderGraph;
     }
 }

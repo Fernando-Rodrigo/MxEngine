@@ -28,32 +28,9 @@
 
 #pragma once
 
-namespace MxEngine
+#include "Core/Config/GlobalConfig.h"
+
+namespace MxEngine::GUI
 {
-    class FrameBuffer;
-
-    class RenderBuffer
-    {
-        using BindableId = unsigned int; 
-        BindableId id = 0;
-        int width = 0, height = 0, samples = 0;
-
-        void FreeRenderBuffer();
-    public:
-        RenderBuffer();
-        ~RenderBuffer();
-        RenderBuffer(const RenderBuffer&) = delete;
-        RenderBuffer(RenderBuffer&&) noexcept;
-        RenderBuffer& operator=(const RenderBuffer&) = delete;
-        RenderBuffer& operator=(RenderBuffer&&) noexcept;
-
-        int GetWidth() const;
-        int GetHeight() const;
-        int GetSamples() const;
-        void InitStorage(int width, int height, int samples = 0);
-        void LinkToFrameBuffer(const FrameBuffer& framebuffer) const;
-        void Bind() const;
-        void Unbind() const;
-        BindableId GetNativeHandle() const;
-    };
+    void SetEditorStyle(EditorStyle style);
 }

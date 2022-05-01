@@ -69,18 +69,28 @@ namespace MxEngine
         this->console->PrintHistory();
     }
 
-    void InitDockspace(ImGuiID dockspaceId)
+    void InitDockspace()
     {
-        static bool inited = false;
+        static bool dockspaceInited = false;
+
+        auto& imguiIO = ImGui::GetIO();
+        imguiIO.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
+        // we should call DockSpaceOverViewport each frame to render dockspace window
+        auto dockspaceId = ImGui::DockSpaceOverViewport();
         auto node = ImGui::DockBuilderGetNode(dockspaceId);
 
-        if (inited || (node != nullptr && node->IsSplitNode()))
+        // return if dockspace already created or loaded from imgui.ini file
+        if (dockspaceInited || (node != nullptr && node->IsSplitNode()))
             return;
 
-        inited = true;
+        dockspaceInited = true;
+
         const float viewportRatio = 0.7f;
         const float editorRatio = 0.15f;
         const float objectListRatio = 0.5f;
+
+        GUI::SetEditorStyle(GlobalConfig::GetEditorStyle());
 
         ImGuiID viewportDockspace = 0; 
         ImGuiID editorDockspace = 0;
@@ -115,8 +125,7 @@ namespace MxEngine
         if (this->shouldRender)
         {
             MAKE_SCOPE_PROFILER("RuntimeEditor::OnUpdate()");
-            auto dockspaceID = ImGui::DockSpaceOverViewport();
-            InitDockspace(dockspaceID);
+            InitDockspace();
 
             static bool isToolsOpened = false;
             static bool isObjectListOpened = false;
@@ -221,54 +230,54 @@ namespace MxEngine
         return false;
     }
 
-    MxString GetShaderMainFile(const ShaderHandle& shader)
-    {
-        return shader->GetDebugFilePath(Shader::PipelineStage::FRAGMENT);
-    }
-
-    MxString GetShaderMainFile(const ComputeShaderHandle& shader)
-    {
-        return shader->GetDebugFilePath();
-    }
-
-    template<typename ShaderHandleType>
-    FilePath GetShaderLookupDirectory(const ShaderHandleType& shader)
-    {
-        return ToFilePath(GetShaderMainFile(shader)).parent_path();
-    }
-
-
-    MxVector<MxString> GetTrackedFilePaths(const ShaderHandle& shader)
-    {
-        MxVector<MxString> paths;
-
-        auto& V = shader->GetDebugFilePath(Shader::PipelineStage::VERTEX);
-        auto& G = shader->GetDebugFilePath(Shader::PipelineStage::GEOMETRY);
-        auto& F = shader->GetDebugFilePath(Shader::PipelineStage::FRAGMENT);
-        auto& includes = shader->GetIncludedFilePaths();
-
-        if (!V.empty()) paths.push_back(V);
-        if (!G.empty()) paths.push_back(G);
-        if (!F.empty()) paths.push_back(F);
-
-        paths.insert(paths.end(), includes.begin(), includes.end());
-
-        return paths;
-    }
-
-    MxVector<MxString> GetTrackedFilePaths(const ComputeShaderHandle& shader)
-    {
-        MxVector<MxString> paths;
-
-        auto& C = shader->GetDebugFilePath();
-        auto& includes = shader->GetIncludedFilePaths();
-
-        if (!C.empty()) paths.push_back(C);
-
-        paths.insert(paths.end(), includes.begin(), includes.end());
-
-        return paths;
-    }
+    // MxString GetShaderMainFile(const ShaderHandle& shader)
+    // {
+    //     return shader->GetDebugFilePath(Shader::PipelineStage::FRAGMENT);
+    // }
+    // 
+    // MxString GetShaderMainFile(const ComputeShaderHandle& shader)
+    // {
+    //     return shader->GetDebugFilePath();
+    // }
+    // 
+    // template<typename ShaderHandleType>
+    // FilePath GetShaderLookupDirectory(const ShaderHandleType& shader)
+    // {
+    //     return ToFilePath(GetShaderMainFile(shader)).parent_path();
+    // }
+    // 
+    // 
+    // MxVector<MxString> GetTrackedFilePaths(const ShaderHandle& shader)
+    // {
+    //     MxVector<MxString> paths;
+    // 
+    //     auto& V = shader->GetDebugFilePath(Shader::PipelineStage::VERTEX);
+    //     auto& G = shader->GetDebugFilePath(Shader::PipelineStage::GEOMETRY);
+    //     auto& F = shader->GetDebugFilePath(Shader::PipelineStage::FRAGMENT);
+    //     auto& includes = shader->GetIncludedFilePaths();
+    // 
+    //     if (!V.empty()) paths.push_back(V);
+    //     if (!G.empty()) paths.push_back(G);
+    //     if (!F.empty()) paths.push_back(F);
+    // 
+    //     paths.insert(paths.end(), includes.begin(), includes.end());
+    // 
+    //     return paths;
+    // }
+    // 
+    // MxVector<MxString> GetTrackedFilePaths(const ComputeShaderHandle& shader)
+    // {
+    //     MxVector<MxString> paths;
+    // 
+    //     auto& C = shader->GetDebugFilePath();
+    //     auto& includes = shader->GetIncludedFilePaths();
+    // 
+    //     if (!C.empty()) paths.push_back(C);
+    // 
+    //     paths.insert(paths.end(), includes.begin(), includes.end());
+    // 
+    //     return paths;
+    // }
 
     /*
     extracts filenames from filepaths list
@@ -323,23 +332,23 @@ namespace MxEngine
         return updateTimes;
     }
 
-    void LoadShader(ShaderHandle shader, const MxVector<FilePath>& filepaths)
-    {
-        auto optionalGeometryStage = shader->GetDebugFilePath(Shader::PipelineStage::GEOMETRY);
-        if (optionalGeometryStage.empty()) // no geometry stage
-        {
-            shader->Load(filepaths[0], filepaths[1]);
-        }
-        else
-        {
-            shader->Load(filepaths[0], filepaths[1], filepaths[2]);
-        }
-    }
-
-    void LoadShader(ComputeShaderHandle shader, const MxVector<FilePath>& filepaths)
-    {
-        shader->Load(filepaths[0]);
-    }
+    // void LoadShader(ShaderHandle shader, const MxVector<FilePath>& filepaths)
+    // {
+    //     auto optionalGeometryStage = shader->GetDebugFilePath(Shader::PipelineStage::GEOMETRY);
+    //     if (optionalGeometryStage.empty()) // no geometry stage
+    //     {
+    //         shader->Load(filepaths[0], filepaths[1]);
+    //     }
+    //     else
+    //     {
+    //         shader->Load(filepaths[0], filepaths[1], filepaths[2]);
+    //     }
+    // }
+    // 
+    // void LoadShader(ComputeShaderHandle shader, const MxVector<FilePath>& filepaths)
+    // {
+    //     shader->Load(filepaths[0]);
+    // }
 
     template<typename ShaderHandleType>
     void AddShaderUpdateListenerImpl(const ShaderHandleType& shader, const FilePath& lookupDirectory)
@@ -364,29 +373,29 @@ namespace MxEngine
             });
     }
 
-    template<>
-    void RuntimeEditor::AddShaderUpdateListener<ShaderHandle, FilePath>(ShaderHandle shader, const FilePath& lookupDirectory)
-    {
-        AddShaderUpdateListenerImpl(shader, lookupDirectory);
-    }
-
-    template<>
-    void RuntimeEditor::AddShaderUpdateListener<ComputeShaderHandle, FilePath>(ComputeShaderHandle shader, const FilePath& lookupDirectory)
-    {
-        AddShaderUpdateListenerImpl(shader, lookupDirectory);
-    }
-
-    template<>
-    void RuntimeEditor::AddShaderUpdateListener<ShaderHandle>(ShaderHandle shader)
-    {
-        AddShaderUpdateListener(shader, GetShaderLookupDirectory(shader));
-    }
-
-    template<>
-    void RuntimeEditor::AddShaderUpdateListener<ComputeShaderHandle>(ComputeShaderHandle shader)
-    {
-        AddShaderUpdateListener(shader, GetShaderLookupDirectory(shader));
-    }
+    // template<>
+    // void RuntimeEditor::AddShaderUpdateListener<ShaderHandle, FilePath>(ShaderHandle shader, const FilePath& lookupDirectory)
+    // {
+    //     AddShaderUpdateListenerImpl(shader, lookupDirectory);
+    // }
+    // 
+    // template<>
+    // void RuntimeEditor::AddShaderUpdateListener<ComputeShaderHandle, FilePath>(ComputeShaderHandle shader, const FilePath& lookupDirectory)
+    // {
+    //     AddShaderUpdateListenerImpl(shader, lookupDirectory);
+    // }
+    // 
+    // template<>
+    // void RuntimeEditor::AddShaderUpdateListener<ShaderHandle>(ShaderHandle shader)
+    // {
+    //     AddShaderUpdateListener(shader, GetShaderLookupDirectory(shader));
+    // }
+    // 
+    // template<>
+    // void RuntimeEditor::AddShaderUpdateListener<ComputeShaderHandle>(ComputeShaderHandle shader)
+    // {
+    //     AddShaderUpdateListener(shader, GetShaderLookupDirectory(shader));
+    // }
 
     void RuntimeEditor::DrawTransformManipulator(Transform& transform)
     {

@@ -26,37 +26,26 @@
 // OR TORT(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#include "IndexBuffer.h"
+#pragma once
+
+#include <VulkanAbstractionLayer/RenderPass.h>
 
 namespace MxEngine
 {
-    IndexBuffer::IndexBuffer(const IndexType* data, size_t count, UsageType usage)
-    {
-        this->Load(data, count, usage);
-    }
+    using namespace VulkanAbstractionLayer;
 
-    size_t IndexBuffer::GetSize() const
+    class DummyRenderPass : public RenderPass
     {
-        return this->GetByteSize() / sizeof(IndexType);
-    }
+        virtual void SetupPipeline(PipelineState state)
+        {
+            state.DeclareAttachment("Output", Format::R8G8B8A8_UNORM);
+            state.AddOutputAttachment("Output", ClearColor{ 1.0f, 0.7f, 0.0f, 1.0f });
+        }
 
-    void IndexBuffer::Load(const IndexType* data, size_t count, UsageType usage)
-    {
-        BufferBase::Load(BufferType::ELEMENT_ARRAY, (const uint8_t*)data, count * sizeof(IndexType), usage);
-    }
+        virtual void ResolveResources(ResolveState resolve) { }
 
-    void IndexBuffer::BufferSubData(const IndexType* data, size_t count, size_t offsetCount)
-    {
-        BufferBase::BufferSubData((const uint8_t*)data, count * sizeof(IndexType), offsetCount * sizeof(IndexType));
-    }
-
-    void IndexBuffer::BufferDataWithResize(const IndexType* data, size_t count)
-    {
-        BufferBase::BufferDataWithResize((const uint8_t*)data, count * sizeof(IndexType));
-    }
-
-    void IndexBuffer::GetBufferData(IndexType* data, size_t count, size_t offsetCount) const
-    {
-        BufferBase::GetBufferData((uint8_t*)data, count * sizeof(IndexType), offsetCount * sizeof(IndexType));
-    }
+        virtual void BeforeRender(RenderPassState state) { }
+        virtual void OnRender(RenderPassState state) { }
+        virtual void AfterRender(RenderPassState state) { }
+    };
 }

@@ -30,16 +30,18 @@
 
 #include "Core/Rendering/RenderController.h"
 #include "Core/Components/Camera/CameraController.h"
+#include "RenderGraph/RenderGraph.h"
 
 namespace MxEngine
 {
     struct RenderAdaptor
     {
         RenderController Renderer;
+        UniqueRef<VulkanAbstractionLayer::RenderGraph> RenderGraph;
         DebugBuffer DebugDrawer;
         CameraController::Handle Viewport;
 
-        constexpr static TextureFormat HDRTextureFormat = TextureFormat::RGBA16F;
+        // constexpr static TextureFormat HDRTextureFormat = TextureFormat::RGBA16F;
         void InitRendererEnvironment();
         void RenderFrame();
         void SubmitRenderedFrame();

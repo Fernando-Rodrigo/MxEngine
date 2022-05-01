@@ -28,41 +28,10 @@
 
 #pragma once
 
-#include "Utilities/Array/ArrayView.h"
+#include <VulkanAbstractionLayer/RenderGraphBuilder.h>
+#include "Utilities/Memory/Memory.h"
 
 namespace MxEngine
 {
-    class VertexBuffer;
-    class IndexBuffer;
-    struct VertexAttribute;
-
-    enum class VertexAttributeInputRate
-    {
-        PER_VERTEX,
-        PER_INSTANCE,
-    };
-
-    class VertexArray
-    {
-        using BindableId = unsigned int;
-
-        BindableId id = 0;
-        int attributeIndex = 0;
-        void FreeVertexArray();
-    public:
-        VertexArray();
-        ~VertexArray();
-        VertexArray(const VertexArray&) = delete;
-        VertexArray(VertexArray&& array) noexcept;
-        VertexArray& operator=(const VertexArray&) = delete;
-        VertexArray& operator=(VertexArray&& array) noexcept;
-
-        BindableId GetNativeHandle() const;
-        void Bind() const;
-        void Unbind() const;
-        void AddVertexLayout(const VertexBuffer& buffer, ArrayView<VertexAttribute> layout, VertexAttributeInputRate inputRate);
-        void RemoveVertexLayout(ArrayView<VertexAttribute> layout);
-        void LinkIndexBuffer(const IndexBuffer& buffer);
-        int GetAttributeCount() const;
-    };
+    UniqueRef<VulkanAbstractionLayer::RenderGraph> CreatRenderGraph();
 }
