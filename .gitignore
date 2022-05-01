@@ -65,3 +65,5 @@ compile_commands.json
 **/Engine/Textures/**
 **/Engine/Shaders/**
 *.etl
+submodules/bullet3
+submodules/bullet3
